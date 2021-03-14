@@ -5,7 +5,7 @@ from scipy.io import savemat
 
 
 def plot(signal, name=""):
-    plt.figure(1)
+    plt.figure(figsize=(16,8))
     plt.title(name)
     plt.plot(signal[1])
     plt.show()
@@ -21,5 +21,5 @@ plot(signal_200)
 plot(signal_3000)
 
 signal_888 = sine(888, 2000, 2)
-write("mysine.wav", 2000, signal_888[1])
-savemat("mysine.mat", {"rate": 2000, "data": signal_888[1]})
+write("mysine.wav", 22000, signal_888[1])
+savemat("mysine.mat", {"rate": 22000, "data": signal_888[1]})
