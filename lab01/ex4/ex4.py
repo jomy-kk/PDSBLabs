@@ -35,7 +35,7 @@ y_150 = moving_average(signal, 150)
 
 duration = 2  # second
 
-plt.figure(figsize=(16, 8))
+fig = plt.figure(figsize=(16, 8))
 ax1 = plt.subplot(3, 1, 1)
 ax1.plot(signal)
 ax1.axis([0, 200, -1, 1])
@@ -46,17 +46,18 @@ plt.xlabel('Number of samples')
 ax2 = plt.subplot(3, 1, 2)
 ax2.plot(y_10)
 ax2.axis([0, 200, -1, 1])
-plt.title('MA with N=3')
+plt.title('MA with N=10')
 plt.ylabel('Amplitude')
 plt.xlabel('Number of samples')
 
 ax3 = plt.subplot(3, 1, 3)
 ax3.plot(y_150)
 ax3.axis([0, 200, -1, 1])
-plt.title('MA with N=50')
+plt.title('MA with N=150')
 plt.ylabel('Amplitude')
 plt.xlabel('Number of samples')
 
 plt.subplots_adjust(hspace=0.5)
 plt.show()
+fig.savefig("ma.png", bbox_inches='tight')
 
