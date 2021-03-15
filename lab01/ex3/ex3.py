@@ -112,13 +112,14 @@ def avg_period(signal, sampling_frequency, duration):
 
 # Apply method
 
-plt.figure(figsize=(16, 8))
-plt.title("Zero-crossing points of 'signal'")
+fig = plt.figure(figsize=(16, 8))
+#plt.title("Zero-crossing points of 'signal'")
 plt.plot(intervals, signal, '-gD', markevery=zero_crossing(signal))
 plt.plot(intervals, [0]*intervals, 'black')
 plt.xlabel("seconds")
 plt.ylabel("Amplitude")
 plt.show()
+fig.savefig("zero-crossings.png", bbox_inches='tight')
 
 print("Estimated period:", avg_period(signal, 1/T, 4-T), "s")
 
