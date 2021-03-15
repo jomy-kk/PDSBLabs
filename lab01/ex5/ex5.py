@@ -35,7 +35,7 @@ print("Total number of channels:", len(channels))
 
 e = signals[7]  # looking in the table
 e = e[:int(len(e)*200/duration) + 1]  # trimming for the first 200 seconds (inclusive)
-x = np.linspace(0, duration, len(e), endpoint=False)
+x = np.linspace(0, 200, len(e), endpoint=False)
 
 fig = plt.figure(figsize=(30, 8))
 plt.plot(x, e)
@@ -65,7 +65,7 @@ def get_edf(fname, channel):
 
 f, sf = get_edf('../data_Lab01/russek_rc_reduced.edf', 'ECG2')
 f = f[:int(len(e)*200/duration) + 1]  # trimming for the first 200 seconds (inclusive)
-x = np.linspace(0, duration, len(f), endpoint=False)
+x = np.linspace(0, 200, len(f), endpoint=False)
 
 fig = plt.figure(figsize=(30, 8))
 plt.plot(x, f)
@@ -108,7 +108,7 @@ setrecursionlimit(700000)
 maxima = (find_extremas(e)[1])
 setrecursionlimit(recursion_limit)
 
-x = np.linspace(0, duration, len(e), endpoint=False)
+x = np.linspace(0, 200, len(e), endpoint=False)
 fig = plt.figure(figsize=(30, 8))
 plt.plot(x, e)
 #plt.scatter(maxima)
@@ -132,6 +132,7 @@ plt.xlabel('seconds')
 fig.tight_layout()
 #fig.show()
 
+
 # Plot RRI interval (in milliseconds)
 rri = np.diff(maxima_indices)/sf * 1000
 
@@ -150,18 +151,27 @@ fig.tight_layout()
 # Point 6
 
 g, sf = get_edf('../data_Lab01/russek_rc_reduced.edf', 'CINTA_TORACICA T')
-g = g[:int(len(e)*120/duration) + 1]  # trimming for the first 120 seconds (inclusive)
-x = np.linspace(0, duration, len(g), endpoint=False)
+g = g[:int(len(g)*120/duration) + 1]  # trimming for the first 120 seconds (inclusive)
+x = np.linspace(0, 120, len(g), endpoint=False)
+
+maxima_indices = find_peaks(g, prominence=3000, distance=sf/2)[0]  # distance = 0.5s is needed, otherwise it detects the same peaks
+rpm = np.diff(maxima_indices)/sf  # not sure if this is what is expected
+avg_rpm = np.mean(rpm)  # in seconds
 
 fig = plt.figure(figsize=(16, 8))
-plt.plot(x, g)
-# plt.plot([np.mean(rri)]*len(rri), 'r--', label="Average RRI")
-#plt.xlim([0, 60])  # only the first 60 seconds
-plt.title("CINTA_TORACICA T")
+plt.plot(x, g, '-gD', markevery=maxima_indices)
+plt.title("CINTA_TORACICA T (raw signal)")
 plt.ylabel('Amplitude [uV]')
 plt.xlabel('seconds')
+fig.tight_layout()
+#fig.show()
+
+fig = plt.figure(figsize=(16, 8))
+plt.plot((maxima_indices/sf)[1:], rpm)
+plt.plot([avg_rpm]*120, 'r--', label="Average RPM")
+plt.title("Instantaneous RPM (from CINTA_TORACICA T raw signal)")
+plt.ylabel('RPM (s)')
+plt.xlabel('signal time (s)')
 plt.legend(loc="upper right")
 fig.tight_layout()
 fig.show()
-
-
