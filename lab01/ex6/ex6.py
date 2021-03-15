@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pyedflib.highlevel import read_edf
 from datetime import datetime, time
+from scipy.signal import iirnotch, filtfilt
 
 signals, signal_headers, header = read_edf('../data_Lab01/russek_rc_reduced.edf')
 duration = 320  # seconds
@@ -13,7 +14,7 @@ time_ahead = (datetime.combine(header['startdate'].date(), start_time) - header[
 
 fig = plt.figure(figsize=(30, 60))
 fig.suptitle("Patient: " + header['patientname'] + "         Technician: " + header['technician'] + "         Start time: " + str(start_time), fontsize=16)
-
+'''
 for i, header, signal in zip(range(1, n_signals + 1), signal_headers, signals):
     samples_ahead = int(time_ahead * header['sample_rate'])
     signal = signal[samples_ahead:int(len(signal) * timescale / duration) + samples_ahead + 1]  # trimming for the first 20 seconds (inclusive)
@@ -28,4 +29,43 @@ for i, header, signal in zip(range(1, n_signals + 1), signal_headers, signals):
 plt.subplots_adjust(hspace=0.6)
 plt.show()
 fig.savefig("sc1.pdf", bbox_inches='tight')
+'''
 
+# Point 5
+
+def get_edf(fname, channel):
+    signals, signal_headers, header = read_edf(fname)
+    chn = 0
+    for h in range(len(signal_headers)):
+        if signal_headers[h]['label'] == channel:
+            chn = h
+    if chn == 0:
+        raise ValueError(channel + " cannot be found in the given EDF.")
+    else:
+        sf = signal_headers[chn]['sample_rate']
+        b = signals[chn]
+        return b, sf
+
+
+fig = plt.figure(figsize=(30, 60))
+fig.suptitle("Patient: " + header['patientname'] + "         Technician: " + header['technician'] + "         Start time: " + str(start_time), fontsize=16)
+n_signals = 6
+
+for i, channel in zip(range(1, n_signals+1), ('EEG C3', 'EEG C4', 'EMGQ', 'EOGE', 'ECG1', 'ECG2')):
+    signal, sf = get_edf('../data_Lab01/russek_rc_reduced.edf', 'ECG2')
+    b, a = iirnotch(50/sf, 35, sf)
+    samples_ahead = int(time_ahead * sf)
+    signal = signal[samples_ahead:int(len(signal) * timescale / duration) + samples_ahead + 1]  # trimming for the first 20 seconds (inclusive)
+    filtered_signal = filtfilt(b, a, signal)
+
+    x = np.linspace(0, timescale, len(filtered_signal), endpoint=False)
+    ax1 = plt.subplot(n_signals, 1, i)
+    ax1.plot(x, filtered_signal)
+    plt.xlim([0, timescale])
+    plt.title(channel)
+    plt.ylabel('Amplitude [uV]')
+    plt.xlabel('Time [s]')
+
+plt.subplots_adjust(hspace=0.6)
+plt.show()
+fig.savefig("sc2.pdf", bbox_inches='tight')
