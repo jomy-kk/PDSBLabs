@@ -4,11 +4,14 @@ from scipy.io.wavfile import write
 from scipy.io import savemat
 
 
-def plot(signal, name=""):
-    plt.figure(figsize=(16,8))
-    plt.title(name)
+def plot(signal, name):
+    fig = plt.figure(figsize=(16,8))
     plt.plot(signal[0], signal[1])
+    plt.xlim([0, 0.01])
+    plt.xlabel("seconds")
+    plt.ylabel("Amplitude")
     plt.show()
+    fig.savefig(name, bbox_inches='tight')
 
 
 def sine(frequency, sampling_frequency, duration):
@@ -19,11 +22,11 @@ def sine(frequency, sampling_frequency, duration):
 
 signal_200 = sine(200, 22000, 1)
 signal_3000 = sine(3000, 22000, 1)
-#plot(signal_200)
-#plot(signal_3000)
+#plot(signal_200, "signal_200.png")
+#plot(signal_3000, "signal_3000.png")
 
 signal_888 = sine(888, 900, 2)
 write("mysine.wav", 22000, signal_888[1])
 savemat("mysine.mat", {"rate": 22000, "data": signal_888[1]})
-plot(signal_888, "Original")
+#plot(signal_888, "888.png")
 
