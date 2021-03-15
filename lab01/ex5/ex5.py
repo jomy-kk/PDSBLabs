@@ -45,6 +45,8 @@ plt.ylabel('Amplitude [' + signal_headers[7]['dimension'] + ']')
 plt.xlabel('seconds')
 fig.tight_layout()
 #plt.show()
+#fig.savefig("ECG1.png", bbox_inches='tight')
+
 
 
 # Point 4 (using get_edf procedure of the professor)
@@ -75,6 +77,7 @@ plt.ylabel('Amplitude [uV]')
 plt.xlabel('seconds')
 fig.tight_layout()
 #plt.show()
+#fig.savefig("ECG2.png", bbox_inches='tight')
 
 
 # Point 5a (using professor find_extremas function)
@@ -130,6 +133,7 @@ plt.title("ECG1 with peaks highlighted")
 plt.ylabel('Amplitude [uV]')
 plt.xlabel('seconds')
 fig.tight_layout()
+#fig.savefig("ECG1_peaks.png", bbox_inches='tight')
 #fig.show()
 
 
@@ -140,12 +144,15 @@ fig = plt.figure(figsize=(16, 8))
 plt.plot((maxima_indices/sf)[1:], rri)
 plt.plot([np.mean(rri)]*len(rri), 'r--', label="Average RRI")
 plt.xlim([0, 60])  # only the first 60 seconds
+plt.ylim([600, 700])
 plt.title("ECG1 RRI")
 plt.ylabel('R-R interval (ms)')
 plt.xlabel('signal time (s)')
 plt.legend(loc="upper right")
 fig.tight_layout()
 #fig.show()
+#fig.savefig("ECG1_RRI.png", bbox_inches='tight')
+
 
 
 # Point 6
@@ -155,9 +162,10 @@ g = g[:int(len(g)*120/duration) + 1]  # trimming for the first 120 seconds (incl
 x = np.linspace(0, 120, len(g), endpoint=False)
 
 maxima_indices = find_peaks(g, prominence=3000, distance=sf/2)[0]  # distance = 0.5s is needed, otherwise it detects the same peaks
-rpm = np.diff(maxima_indices)/sf  # not sure if this is what is expected
-avg_rpm = np.mean(rpm)  # in seconds
+avg_rpm = len(maxima_indices) / 2  # dividing by 2 minutes
+print("Mean RPM", avg_rpm)
 
+'''
 fig = plt.figure(figsize=(16, 8))
 plt.plot(x, g, '-gD', markevery=maxima_indices)
 plt.title("CINTA_TORACICA T (raw signal)")
@@ -165,13 +173,26 @@ plt.ylabel('Amplitude [uV]')
 plt.xlabel('seconds')
 fig.tight_layout()
 #fig.show()
+'''
+
+# Instantaneous RPM
+instantaneous_rpm = []
+for index, n_breaths in zip(maxima_indices, range(1, len(maxima_indices) + 1)):
+    sample_number = index + 1
+    seconds_passed = sample_number / sf
+    dRPM = n_breaths * 60 / seconds_passed
+    instantaneous_rpm.append(dRPM)
+
 
 fig = plt.figure(figsize=(16, 8))
-plt.plot((maxima_indices/sf)[1:], rpm)
+plt.plot((maxima_indices/sf), instantaneous_rpm)
 plt.plot([avg_rpm]*120, 'r--', label="Average RPM")
 plt.title("Instantaneous RPM (from CINTA_TORACICA T raw signal)")
-plt.ylabel('RPM (s)')
+plt.ylabel('RPM (#)')
 plt.xlabel('signal time (s)')
 plt.legend(loc="upper right")
 fig.tight_layout()
 fig.show()
+fig.savefig("RPM.png", bbox_inches='tight')
+
+
