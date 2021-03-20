@@ -7,7 +7,7 @@ mpl.use('macosx')
 def plot_peak_intervals(peak_times, label, method, interval_label, directory_to_save, ylim=None):
     # Compute interval
     intervals = np.diff(peak_times)  # in seconds
-    fig = plt.figure(figsize=(16, 4))
+    fig = plt.figure(figsize=(16, 2.5))
     fig.tight_layout()
     plt.plot(peak_times[1:], intervals, '.')
     mean = np.mean(intervals)
@@ -26,7 +26,7 @@ def plot_peak_intervals(peak_times, label, method, interval_label, directory_to_
 
 
 def plot_peaks(signal, signal_times, peak_times, peak_indices, envelopes, label, method, directory_to_save, ylim=None):
-    fig = plt.figure(figsize=(16, 4))
+    fig = plt.figure(figsize=(16, 2.5))
     fig.tight_layout()
     plt.plot(signal_times, signal)
     plt.plot(peak_times, signal[peak_indices], 'ro')
@@ -41,7 +41,7 @@ def plot_peaks(signal, signal_times, peak_times, peak_indices, envelopes, label,
 
 
 def plot_onsets(signal, signal_times, onset_times, envelopes, label, method, directory_to_save, ylim=None):
-    fig = plt.figure(figsize=(16, 4))
+    fig = plt.figure(figsize=(16, 2.5))
     fig.tight_layout()
     plt.plot(signal_times, signal)
     plt.vlines(onset_times, ylim[0] if ylim is not None else -100, ylim[1] if ylim is not None else 100,
