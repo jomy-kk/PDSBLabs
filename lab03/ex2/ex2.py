@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.io.wavfile import write
-from scipy.signal import resample, decimate, spectrogram
+from scipy.io.wavfile import write, read
+from scipy.signal import resample, decimate, upfirdn, firwin, kaiserord
 from scipy.fft import fft
 import plots_aux as plt
 import math
@@ -31,7 +31,8 @@ def ex2_3_decimate(signal=None, ts=None, factor=2, show=False):
     if signal is None and ts is None:
         ts, signal = ex2_1_generate_sinusoid()
     resampled_signal = decimate(signal, factor, zero_phase=True)
-    resampled_ts = np.linspace(0, len(resampled_signal)/sf, len(resampled_signal), endpoint=False)
+    sampling_frequency = sf/factor
+    resampled_ts = np.linspace(0, len(resampled_signal)/sampling_frequency, len(resampled_signal), endpoint=False)
     plt.plot_signal_processed(ts, signal, resampled_ts, resampled_signal, 'Decimated',
                               'Decimated with factor ' + str(factor), show=show, xlim=xlim)
     return resampled_ts, resampled_signal
@@ -56,12 +57,40 @@ def ex2_4_absolute_spectrum(signal, sampling_frequency, label, show=False):
     plt.plot_absolute_spectrum(fq, pw, label, show=show)
 
 
-def ex2_6_interpolate():
-    pass
+def ex2_6_interpolate(signal=None, ts=None, factor=2, sampling_frequency=sf, show=False):
+    if signal is None and ts is None:
+        ts, signal = ex2_1_generate_sinusoid()
+        sampling_frequency = sf
+
+    ts, signal = ts[:5000], signal[:5000]
+
+    nyq_rate = sampling_frequency / 2
+    width = 5.0 / nyq_rate  # with a 5 Hz transition width
+    ripple_db = 60.0  # attenuation in the stop band (dB)
+    filter_order, beta = kaiserord(ripple_db, width)  # order and Kaiser parameter for the FIR filter
+
+    cutoff = 0.5/factor
+    filter_taps = firwin(filter_order, 1000/nyq_rate, window=('kaiser', beta))
+    resampled_signal = upfirdn(filter_taps, signal, up=int(len(signal)*factor))
+    sampling_frequency *= factor
+    resampled_ts = np.linspace(0, len(resampled_signal)/sampling_frequency, len(resampled_signal), endpoint=False)
+    print(resampled_signal)
+    plt.plot_signal_processed(ts, signal, resampled_ts, resampled_signal,
+                              'Interpolated', 'Interpolated with factor ' + str(factor), show=show, xlim=xlim)
+    return resampled_ts, resampled_signal
 
 
-def ex2_8_resample():
-    pass
+def ex2_8_resample(new_sampling_frequency, show=False):
+    sampling_frequency, signal = read("../data/tone.wav")
+    n_samples = len(signal)
+    duration = n_samples/sampling_frequency  # in seconds
+    new_n_samples = int(n_samples * new_sampling_frequency / sampling_frequency)
+    resampled_signal = resample(signal, new_n_samples)
+    ts = np.linspace(0, duration, n_samples, endpoint=False)
+    resampled_ts = np.linspace(0, duration, new_n_samples, endpoint=False)
+    plt.plot_signal_processed(ts, signal, resampled_ts, resampled_signal,
+                              'Resampled', 'Resampled to ' + str(new_sampling_frequency) + ' Hz', xlim=xlim, show=show)
+    return resampled_signal
 
 
 #ex2_1_generate_sinusoid(save=True, plot=True, show=False)
@@ -86,7 +115,7 @@ ex2_4_absolute_spectrum(ex2_3_decimate(factor=2)[1], sf, "Decimated by 2", show=
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=4)[1], sf, "Decimated by 4", show=False)
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=8)[1], sf, "Decimated by 8", show=False)
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=16)[1], sf, "Decimated by 16", show=False)
-'''
+
 
 ex2_4_absolute_spectrum(ex2_1_generate_sinusoid()[1], sf, "Original", show=False)
 ex2_4_absolute_spectrum(ex2_2_downsample(factor=2)[1], sf/2, "Downsampled by 2", show=False)
@@ -97,3 +126,10 @@ ex2_4_absolute_spectrum(ex2_3_decimate(factor=2)[1], sf/2, "Decimated by 2", sho
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=4)[1], sf/4, "Decimated by 4", show=False)
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=8)[1], sf/8, "Decimated by 8", show=False)
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=16)[1], sf/16, "Decimated by 16", show=False)
+'''
+
+#ex2_6_interpolate(show=True)
+
+ex2_8_resample(7700, show=True)
+ex2_8_resample(4100, show=True)
+
