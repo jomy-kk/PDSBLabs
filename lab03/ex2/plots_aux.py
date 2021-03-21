@@ -36,3 +36,13 @@ def plot_signal_processed(original_ts, original_signal, processed_ts, processed_
         plt.show()
 
 
+def plot_spectogram(f, t, spect, label, show=False):
+    fig = plt.figure(figsize=(16, 16))
+    plt.pcolormesh(t, f, spect, shading='gouraud')
+    plt.ylabel('Frequency [Hz]')
+    plt.xlabel('Time [s]')
+    plt.title(label)
+    plt.colorbar(label='Power / frequency [dB/Hz]')
+    fig.savefig("results/spectograms/" + label + ".png", bbox_inches='tight')
+    if show:
+        plt.show()

@@ -33,8 +33,11 @@ def ex2_3_decimate(signal=None, ts=None, factor=2, show=False):
                               'Decimated with factor ' + str(factor), show=show, xlim=xlim)
     return resampled_ts, resampled_signal
 
-def ex2_4_absolute_spectrum():
-    pass
+def ex2_4_absolute_spectrum(signal, sampling_frequency, label, show=False):
+    assert signal is not None
+
+    f, t, spect = spectrogram(signal, sampling_frequency)
+    plt.plot_spectogram(f, t, spect, label, show=show)
 
 
 def ex2_6_interpolate():
@@ -52,7 +55,17 @@ def ex2_8_resample():
 #ex2_2_downsample(factor=8, show=False)
 #ex2_2_downsample(factor=16, show=False)
 
-ex2_3_decimate(factor=2)
-ex2_3_decimate(factor=4)
-ex2_3_decimate(factor=8)
-ex2_3_decimate(factor=16)
+#ex2_3_decimate(factor=2)
+#ex2_3_decimate(factor=4)
+#ex2_3_decimate(factor=8)
+#ex2_3_decimate(factor=16)
+
+ex2_4_absolute_spectrum(ex2_1_generate_sinusoid()[1], sf, "Original", show=False)
+ex2_4_absolute_spectrum(ex2_2_downsample(factor=2)[1], sf, "Downsampled by 2", show=False)
+ex2_4_absolute_spectrum(ex2_2_downsample(factor=4)[1], sf, "Downsampled by 4", show=False)
+ex2_4_absolute_spectrum(ex2_2_downsample(factor=8)[1], sf, "Downsampled by 8", show=False)
+ex2_4_absolute_spectrum(ex2_2_downsample(factor=16)[1], sf, "Downsampled by 16", show=False)
+ex2_4_absolute_spectrum(ex2_3_decimate(factor=2)[1], sf, "Decimated by 2", show=False)
+ex2_4_absolute_spectrum(ex2_3_decimate(factor=4)[1], sf, "Decimated by 4", show=False)
+ex2_4_absolute_spectrum(ex2_3_decimate(factor=8)[1], sf, "Decimated by 8", show=False)
+ex2_4_absolute_spectrum(ex2_3_decimate(factor=16)[1], sf, "Decimated by 16", show=False)
