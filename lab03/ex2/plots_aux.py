@@ -46,3 +46,21 @@ def plot_spectogram(f, t, spect, label, show=False):
     fig.savefig("results/spectograms/" + label + ".png", bbox_inches='tight')
     if show:
         plt.show()
+
+
+def plot_absolute_spectrum(fq, pw, label, xmax=None, ylim=None, show=False):
+    fig = plt.figure(figsize=(16, 4))
+    fig.tight_layout()
+    plt.plot(fq, pw)
+    plt.title(label)
+    plt.ylabel('Power')
+    plt.xlabel('Frequency [Hz]')
+    if ylim is not None:
+        plt.ylim(ylim)
+    if xmax is not None:
+        plt.xlim(0, xmax)
+    else:
+        plt.xlim(0, fq[-1])
+    fig.savefig("results/spectra/" + label + ".png", bbox_inches='tight')
+    if show:
+        plt.show()
