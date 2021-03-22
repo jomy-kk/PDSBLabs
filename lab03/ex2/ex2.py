@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.io.wavfile import write, read
-from scipy.signal import resample, decimate, upfirdn, firwin, kaiserord
+from scipy.signal import resample, decimate, upfirdn, firwin, kaiserord, cheby2, cheb2ord
 from scipy.fft import fft
 import plots_aux as plt
 import math
@@ -57,26 +57,39 @@ def ex2_4_absolute_spectrum(signal, sampling_frequency, label, show=False):
     plt.plot_absolute_spectrum(fq, pw, label, show=show)
 
 
-def ex2_6_interpolate(signal=None, ts=None, factor=2, sampling_frequency=sf, show=False):
+def ex2_6_interpolate(signal=None, ts=None, up_factor=2, down_factor=11, sampling_frequency=sf, ftype='fir', show=False):
     if signal is None and ts is None:
         ts, signal = ex2_1_generate_sinusoid()
         sampling_frequency = sf
 
+    if signal is not None and ts is None:
+        ts = np.linspace(0, len(signal)/sf, len(signal), endpoint=False)
+
+    # just do the beginning (bc of time complexity)
     ts, signal = ts[:5000], signal[:5000]
 
-    nyq_rate = sampling_frequency / 2
-    width = 5.0 / nyq_rate  # with a 5 Hz transition width
-    ripple_db = 60.0  # attenuation in the stop band (dB)
-    filter_order, beta = kaiserord(ripple_db, width)  # order and Kaiser parameter for the FIR filter
+    if ftype == 'fir':
+        nyq_rate = sampling_frequency / 2
+        width = 400.0 / nyq_rate  # with a 400 Hz transition width
+        ripple_db = 60.0  # attenuation in the stop band (dB)
+        filter_order, beta = kaiserord(ripple_db, width)  # order and Kaiser parameter for the FIR filter
 
-    cutoff = 0.5/factor
-    filter_taps = firwin(filter_order, 1000/nyq_rate, window=('kaiser', beta))
-    resampled_signal = upfirdn(filter_taps, signal, up=int(len(signal)*factor))
-    sampling_frequency *= factor
+        cutoff = 0.5/up_factor
+        filter_taps = firwin(filter_order, cutoff*nyq_rate, window=('kaiser', beta), fs=sampling_frequency)
+
+        print("Filter order", filter_order)
+        resampled_signal = upfirdn(filter_taps, signal, up=up_factor, down=down_factor)
+
+    if ftype == 'cheby2':
+        pass
+        # TODO: with Chebychev II filter
+
+
+    sampling_frequency *= up_factor/down_factor
     resampled_ts = np.linspace(0, len(resampled_signal)/sampling_frequency, len(resampled_signal), endpoint=False)
-    print(resampled_signal)
     plt.plot_signal_processed(ts, signal, resampled_ts, resampled_signal,
-                              'Interpolated', 'Interpolated with factor ' + str(factor), show=show, xlim=xlim)
+                              'Interpolated', 'Interpolated with factor ' + str(up_factor) + '/' + str(down_factor),
+                              show=show, xlim=xlim)
     return resampled_ts, resampled_signal
 
 
@@ -128,8 +141,12 @@ ex2_4_absolute_spectrum(ex2_3_decimate(factor=8)[1], sf/8, "Decimated by 8", sho
 ex2_4_absolute_spectrum(ex2_3_decimate(factor=16)[1], sf/16, "Decimated by 16", show=False)
 '''
 
-#ex2_6_interpolate(show=True)
+#ex2_6_interpolate(up_factor=2, down_factor=11, ftype='fir', show=False)
+#ex2_6_interpolate(up_factor=4, down_factor=23, ftype='fir', show=False)
+#sf, signal = read('../data/looneyTunes.wav')
+#xlim = (0.5, 0.52)
+#ex2_6_interpolate(signal=signal, sampling_frequency=sf, up_factor=3, down_factor=8, ftype='fir', show=False)
 
-ex2_8_resample(7700, show=True)
-ex2_8_resample(4100, show=True)
+#ex2_8_resample(7700, show=True)
+#ex2_8_resample(4100, show=True)
 

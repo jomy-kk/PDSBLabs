@@ -31,7 +31,7 @@ def plot_signal_processed(original_ts, original_signal, processed_ts, processed_
     if xlim is not None:
         plt.xlim(xlim)
     plt.legend(loc='upper right')
-    fig.savefig("results/" + label + ".png", bbox_inches='tight')
+    fig.savefig("results/" + label.replace('/', '_') + ".png", bbox_inches='tight')
     if show:
         plt.show()
 
