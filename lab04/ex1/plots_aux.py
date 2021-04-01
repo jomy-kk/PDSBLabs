@@ -38,15 +38,20 @@ def plot_absolute_spectrum(fq, pw, label, xmax=None, xticks=None, ylim=None, sho
     fig.savefig("results/" + label + ".png", bbox_inches='tight')
     if show:
         plt.show()
+    plt.close(fig)
 
 
 def plot_spectogram(f, t, spect, label, show=False):
-    fig = plt.figure(figsize=(10, 10))
-    plt.pcolormesh(t, f, spect, shading='gouraud')
+    plt.clf()
+    fig = plt.figure(figsize=(16, 6))
+
+    plt.pcolormesh(t, f, spect, cmap='jet', shading='gouraud')
     plt.ylabel('Frequency [Hz]')
     plt.xlabel('Time [s]')
     plt.title(label)
+    plt.ylim((0, 300))
     plt.colorbar(label='Power / frequency [dB/Hz]')
     fig.savefig("results/" + label + ".png", bbox_inches='tight')
     if show:
         plt.show()
+    plt.close(fig)

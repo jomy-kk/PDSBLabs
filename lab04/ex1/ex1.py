@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import spectrogram
+from scipy.signal import spectrogram, get_window
 import plots_aux as plt
 from spect import spect
 
@@ -9,7 +9,7 @@ xlim = (0, 3)
 sf = 1024
 
 
-def ex1a_generate_signal(freq1=30, freq2=101, freq3=270, sf=sf, label='Generated Signal', show=False):
+def ex1a_generate_signal(freq1=30, freq2=101, freq3=270, sf=sf, label='Signal A', show=False):
     ts1 = np.linspace(0, 1, int(sf), endpoint=False)
     signal1 = np.sin(2 * np.pi * freq1 * ts1)
     ts2 = np.linspace(1, 2, int(sf), endpoint=False)
@@ -24,7 +24,7 @@ def ex1a_generate_signal(freq1=30, freq2=101, freq3=270, sf=sf, label='Generated
     return ts, signal
 
 
-def ex1b_fft(signal=None, ts=None, label="FFT of generated signal", xticks=[30, 101, 270], show=False):
+def ex1b_fft(signal=None, ts=None, label="FFT of signal A", xticks=[30, 101, 270], show=False):
     if signal is None and ts is None:
         ts, signal = ex1a_generate_signal()
 
@@ -32,34 +32,41 @@ def ex1b_fft(signal=None, ts=None, label="FFT of generated signal", xticks=[30, 
     plt.plot_absolute_spectrum(fq, pw, label, xticks=xticks, show=show)
 
 
-def ex1c_spectogram_psd(signal=None, ts=None, label="PSD of the generated signal", show=False):
+def ex1c_spectrogram(signal=None, ts=None, label="Amplitude spectrogram of signal A", show=False):
+    if signal is None and ts is None:
+        ts, signal = ex1a_generate_signal(show=False)
+
+    wlen = len(signal) - 1499
+    freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hamming', wlen), nperseg=wlen, nfft=wlen, noverlap=0, mode='psd')
+    plt.plot_spectogram(freqs, time, Sxx, label="Hamming (" + str(wlen) + ")", show=show)
+
+
+def ex1d_f_g_spectrogram_stft(signal=None, ts=None, wlen=256, overlaps=(0,), show=False):
     if signal is None and ts is None:
         ts, signal = ex1a_generate_signal()
 
-    freqs, time, Sxx = spectrogram(signal, sf, window='hamming', nfft=len(signal), noverlap=0)
-    plt.plot_spectogram(freqs, time, Sxx, label=label, show=show)
+    for overlap in overlaps:
+        overlap = int(overlap * wlen)
 
+        label1 = "Hamming window, size " + str(wlen) + ", overlap " + str(overlap)
+        freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hamming', wlen), nperseg=wlen, noverlap=overlap, mode='magnitude')
+        plt.plot_spectogram(freqs, time, Sxx, label=label1, show=show)
 
-def ex1d_spectogram_stft(signal=None, ts=None, label="STFT of the generated signal", show=False):
-    if signal is None and ts is None:
-        ts, signal = ex1a_generate_signal()
+        label2 = "Hann window, size " + str(wlen) + ", overlap " + str(overlap)
+        freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hann', wlen), nperseg=wlen, noverlap=overlap, mode='magnitude')
+        plt.plot_spectogram(freqs, time, Sxx, label=label2, show=show)
 
-    label1 = label + " -- Hamming window"
-    freqs, time, Sxx = spectrogram(signal, sf, window='hamming', nfft=256, noverlap=0, mode='magnitude')
-    plt.plot_spectogram(freqs, time, Sxx, label=label1, show=show)
-
-    label2 = label + " -- Hann window"
-    freqs, time, Sxx = spectrogram(signal, sf, window='hann', nfft=256, noverlap=0, mode='magnitude')
-    plt.plot_spectogram(freqs, time, Sxx, label=label2, show=show)
-
-    label3 = label + " -- Tukey window"
-    freqs, time, Sxx = spectrogram(signal, sf, window=('tukey', 0.3), nfft=256, noverlap=0, mode='magnitude')
-    plt.plot_spectogram(freqs, time, Sxx, label=label3, show=show)
+        label3 = "Tukey window, size " + str(wlen) + ", overlap " + str(overlap)
+        freqs, time, Sxx = spectrogram(signal, sf, window=('tukey', 0.25), nperseg=wlen, noverlap=overlap, mode='magnitude')
+        plt.plot_spectogram(freqs, time, Sxx, label=label3, show=show)
 
 
 
 #ex1a_generate_signal()
 #ex1b_fft()
-#ex1c_spectogram_psd()
-ex1d_spectogram_stft()
+#ex1c_spectrogram(show=True)
+#ex1d_spectrogram_stft()
+#ex1d_f_g_spectrogram_stft(wlen=256)
+#ex1d_f_g_spectrogram_stft(wlen=256, overlaps=(0.1, 0.5, 0.7))
+#ex1d_f_g_spectrogram_stft(wlen=64, overlaps=(0.1, 0.5, 0.7))
 
