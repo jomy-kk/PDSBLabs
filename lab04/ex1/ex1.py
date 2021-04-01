@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import spectrogram, get_window
+from scipy.signal import get_window
 import plots_aux as plt
 from spect import spect
 
@@ -36,9 +36,8 @@ def ex1c_spectrogram(signal=None, ts=None, label="Amplitude spectrogram of signa
     if signal is None and ts is None:
         ts, signal = ex1a_generate_signal(show=False)
 
-    wlen = len(signal) - 1499
-    freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hamming', wlen), nperseg=wlen, nfft=wlen, noverlap=0, mode='psd')
-    plt.plot_spectogram(freqs, time, Sxx, label="Hamming (" + str(wlen) + ")", show=show)
+    wlen = len(signal)  # ignore the Warning saying only 1 segment is calculated, because that's exactly what we want
+    plt.plot_spectogram(signal, sf, get_window('hamming', wlen), wlen, 0, label="Hamming (" + str(wlen) + ")", show=show)
 
 
 def ex1d_f_g_spectrogram_stft(signal=None, ts=None, wlen=256, overlaps=(0,), show=False):
@@ -64,7 +63,7 @@ def ex1d_f_g_spectrogram_stft(signal=None, ts=None, wlen=256, overlaps=(0,), sho
 
 #ex1a_generate_signal()
 #ex1b_fft()
-#ex1c_spectrogram(show=True)
+ex1c_spectrogram()
 #ex1d_spectrogram_stft()
 #ex1d_f_g_spectrogram_stft(wlen=256)
 #ex1d_f_g_spectrogram_stft(wlen=256, overlaps=(0.1, 0.5, 0.7))
