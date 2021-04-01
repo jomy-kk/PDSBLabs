@@ -48,23 +48,20 @@ def ex1d_f_g_spectrogram_stft(signal=None, ts=None, wlen=256, overlaps=(0,), sho
         overlap = int(overlap * wlen)
 
         label1 = "Hamming window, size " + str(wlen) + ", overlap " + str(overlap)
-        freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hamming', wlen), nperseg=wlen, noverlap=overlap, mode='magnitude')
-        plt.plot_spectogram(freqs, time, Sxx, label=label1, show=show)
+        plt.plot_spectogram(signal, sf, get_window('hamming', wlen), wlen, overlap, label=label1, show=show)
 
         label2 = "Hann window, size " + str(wlen) + ", overlap " + str(overlap)
-        freqs, time, Sxx = spectrogram(signal, sf, window=get_window('hann', wlen), nperseg=wlen, noverlap=overlap, mode='magnitude')
-        plt.plot_spectogram(freqs, time, Sxx, label=label2, show=show)
+        plt.plot_spectogram(signal, sf, get_window('hann', wlen), wlen, overlap, label=label2, show=show)
 
-        label3 = "Tukey window, size " + str(wlen) + ", overlap " + str(overlap)
-        freqs, time, Sxx = spectrogram(signal, sf, window=('tukey', 0.25), nperseg=wlen, noverlap=overlap, mode='magnitude')
-        plt.plot_spectogram(freqs, time, Sxx, label=label3, show=show)
+        label3 = "Rectangular window, size " + str(wlen) + ", overlap " + str(overlap)
+        plt.plot_spectogram(signal, sf, get_window('rectangular', wlen), wlen, overlap, label=label3, show=show)
 
 
+# Testing below
 
 #ex1a_generate_signal()
 #ex1b_fft()
-ex1c_spectrogram()
-#ex1d_spectrogram_stft()
+#ex1c_spectrogram()
 #ex1d_f_g_spectrogram_stft(wlen=256)
 #ex1d_f_g_spectrogram_stft(wlen=256, overlaps=(0.1, 0.5, 0.7))
 #ex1d_f_g_spectrogram_stft(wlen=64, overlaps=(0.1, 0.5, 0.7))
