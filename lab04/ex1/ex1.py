@@ -32,7 +32,7 @@ def ex1b_fft(signal=None, ts=None, label="FFT of signal A", xticks=[30, 101, 270
     plt.plot_absolute_spectrum(fq, pw, label, xticks=xticks, show=show)
 
 
-def ex1c_spectrogram(signal=None, ts=None, label="Amplitude spectrogram of signal A", show=False):
+def ex1c_amplitude_fft(signal=None, ts=None, label="Amplitude spectrogram of signal A", show=False):
     if signal is None and ts is None:
         ts, signal = ex1a_generate_signal(show=False)
 
@@ -60,7 +60,7 @@ def ex1d_f_g_spectrogram_stft(signal=None, ts=None, wlen=256, overlaps=(0,), sho
 # Testing below
 
 #ex1a_generate_signal()
-#ex1b_fft()
+ex1b_fft()
 #ex1c_spectrogram()
 #ex1d_f_g_spectrogram_stft(wlen=256)
 #ex1d_f_g_spectrogram_stft(wlen=256, overlaps=(0.1, 0.5, 0.7))
