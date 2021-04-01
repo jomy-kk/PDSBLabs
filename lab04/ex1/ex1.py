@@ -32,7 +32,7 @@ def ex1b_fft(signal=None, ts=None, label="FFT of signal A", xticks=[30, 101, 270
     plt.plot_absolute_spectrum(fq, pw, label, xticks=xticks, show=show)
 
 
-def ex1c_amplitude_fft(signal=None, ts=None, label="Amplitude spectrogram of signal A", show=False):
+def ex1c_spectrogram(signal=None, ts=None, label="Amplitude spectrogram of signal A", show=False):
     if signal is None and ts is None:
         ts, signal = ex1a_generate_signal(show=False)
 
