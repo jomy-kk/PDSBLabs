@@ -57,7 +57,7 @@ def plot_spectogram(signal, sf, window, wlen, noverlap, label, highlights=None, 
         for highlight in highlights:
             plt.plot([0, 1], [highlight, highlight], '--', linewidth=0.7)
 
-    fig.savefig("results/" + label + ".png", bbox_inches='tight')
+    fig.savefig("results/tukey/" + label + ".png", bbox_inches='tight')
     if show:
         plt.show()
     plt.close(fig)
