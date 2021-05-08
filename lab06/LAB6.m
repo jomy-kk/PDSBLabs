@@ -1,7 +1,5 @@
 % Lab 6
 
-import 
-
 %% Exercise a)
 
 % Load data
@@ -33,8 +31,7 @@ title('Original ECG signal and with added noise')
 axis tight
 
 % Get SNR of signal xn
-snr = signal_to_noise_ratio(xn, noise);
-disp("SNR of xn = " + snr + ' dB')
+disp("SNR of xn = " + signal_to_noise_ratio(xn, noise) + ' dB')
 % it returns around 8 dB
 
 
@@ -48,7 +45,6 @@ MAX_SHIFTS = 500;
 
 % Keep the minimum MSE
 min_mse = 100; % arbitrary high value
-error_min_mse = 0; % the error margin that yielded the minimum MSE
 
 for i=1:length(error_margins) % for each error margin, do:
     fprintf('\n\n####################\nTesting an error margin of %d\n', error_margins(i));
@@ -75,16 +71,39 @@ for i=1:length(error_margins) % for each error margin, do:
     if mse < min_mse
         min_mse = mse;
         error_min_mse = error_margins(i);
+        best_xnf = xnf;
+        best_imf = imf;
     end
 end
 
 fprintf('\nFrom the tested error margins, the one that yielded the minimum MSE was %d (mse = %d)\n', error_min_mse, min_mse);
 % We expect the less the error margin is, the less the MSE is going to be.
 
+fprintf('Selecting that as the new signal xnf!\n');
+xnf = best_xnf; % commit the xnf with less MSE as the unique signal xnf
+xn_imf = best_imf;
 
-%% c)
+% Compute SNR
+disp("SNR of xnf = " + snr(xnf) + ' dB')
 
-figure(3)
+% Delete auxiliary variables
+clear('error_min_mse')
+clear('best_xnf')
+clear('best_imf')
+clear('min_mse')
+
+
+%% Exercise c)
+
+% Professor implementation
+options = emdoptimset('stop','Nsifts','N',MAX_SHIFTS);
+imf = emd(xn, options);
+imf = num2cell(imf, 2); % convert matrix to cell
+hht_imf(imf, 1/Fs);
+
+% Our implementation
+my_pHHT(xn, 1/Fs);
+
 
 %% d)
 
@@ -254,5 +273,89 @@ function [reconstructed_signal, error] = remove_noise(signal, imf, label, show)
 end
 
 
+% Our implementation of HHT
+function my_pHHT(x, Ts)
+% Given the pre-computed IMFs of a signal (including the residue) and Ts
+% the sampling period, it plots the HHT.
 
+% Compute IMF
+imfA = emd_decomposition(x, 1e-6, 500, 'Signal X', false); %computation of imfAs
+imf = num2cell(imfA, 2); % convert matrix to cell, respective to the 2nd axis
+
+% Some constants
+M = length(imf);
+N = length(x);
+
+% Compute Hilbert-Huang transform 
+for i = 1:M
+    z{i} = hilbert(imf{i}); % get the complex
+    b(i) = sum(imf{i}.*imf{i}); % get total energy of each IMF
+    th   = angle(z{i}); % get the phase of the complex
+    d{i} = diff (th)/(Ts*2*pi); % get phase derivatives
+end
+
+% Get relative energy of each IMF
+b = b/max(b); 
+
+% Plots time vs frequency vs amplitude (spectogram)
+c = linspace(0, (N-2)*Ts, N-1);
+figure1 = figure();
+figure2 = figure();
+
+for k = 1:M
+    power_index = b(k);
+    if power_index<0.5
+        colors = [0 2*power_index 1-2*power_index];
+    else 
+        colors = [2*(power_index-0.5) 1-2*(power_index-0.5) 0];
+    end
+    figure(figure1)
+    plot(c,d{k},'*','color',colors,'MarkerSize',2);
+    set(gca,'FontSize',8,'XLim',[0 c(end)],'YLim',[0 1/(2*Ts)]); xlabel('Time'), ylabel('Frequency');
+    hold on 
+    figure(figure2)
+    plot(c,d{k},'*','color',colors,'MarkerSize',3);
+    set(gca,'FontSize',8,'XLim',[0 c(end)],'YLim',[0 1/(2*Ts)]); xlabel('Time'), ylabel('Frequency');
+    hold on
+    figure(figure2)
+    plot(c,d{k},'color',colors,'Linewidth', 1e-6);
+    set(gca,'FontSize',8,'XLim',[0 c(end)],'YLim',[0 1/(2*Ts)]); xlabel('Time'), ylabel('Frequency');
+    hold on
+end
+
+
+
+% try to use this function given. It's giving an error.
+%[A,f,tt] = hhspectrum(x, c);
+%figure
+%plot(tt, f, '*','color', A, 'MarkerSize',2);
+
+
+% Plot IMFs
+figure
+sgtitle('EMD Decomposition')
+c = linspace(0, (N-1)*Ts, N); % horizontal axis
+for k1 = 0:M
+   if k1 == 0 % first one
+       title ('Original Signal');
+       subplot(M+1,1,k1+1);
+       plot(c,x);
+       xlabel('Time [s]');
+       ylabel ('Amplitude [uV]');
+       set(gca,'FontSize',8,'XLim',[0 c(end)]);
+   else % following ones
+       subplot(M+1,1,k1+1);
+       plot(c,imf{k1});
+       xlabel('Time [s]');
+       ylabel ('Amplitude [uV]');
+       if k1 ~= M % not the last one
+           title (['IMF ' num2str(k1)]);
+       else % last one is the residue
+           title ('Residue');
+       end
+       set(gca,'FontSize',8,'XLim',[0 c(end)]);
+   end
+end
+
+end
 
