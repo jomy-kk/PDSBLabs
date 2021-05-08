@@ -148,9 +148,16 @@ fprintf('MSE of EMD: %d\n', mean(abs(x-xremd).*abs(x-xremd)))
 
 
 %% g)
+NR = 50;
+NStand = 0.5;
 
-xreemd = eemd(xr, 0, NR, 100);
-erreemd = x - xreemd;
+a1 = tic;
+[modos1, its1] = eemd(xr, NStand, NR, 100);
+toc(a1)
+
+% Reconstruir
+
+% erreemd = x - xreemd;
 
 figure(8)
 
