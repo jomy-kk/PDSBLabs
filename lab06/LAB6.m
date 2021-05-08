@@ -43,54 +43,8 @@ error_margins = [1e-6 1e-4 1e-3 1e-1];
 % Define maximum shifts limit
 MAX_SHIFTS = 500;
 
-% Keep the minimum MSE
-min_mse = 100; % arbitrary high value
-
-for i=1:length(error_margins) % for each error margin, do:
-    fprintf('\n\n####################\nTesting an error margin of %d\n', error_margins(i));
-    
-    % On the following calls, pass show=true to plot the results.
-    
-    % Get EMD decomposition of the original signal
-    fprintf('\nComputing EMD decomposition of signal X...\n')
-    emd_decomposition(x, error_margins(i), MAX_SHIFTS, 'Signal X', false);
-    
-    % Get EMD decomposition of the noisy signal
-    fprintf('\nComputing EMD decomposition of signal Xn...\n')
-    imf = emd_decomposition(xn, error_margins(i), MAX_SHIFTS, 'Signal Xn', false);
-    
-    % Remove noise of the noisy signal
-    fprintf('\nRemoving noise from signal Xn...\n')
-    [xnf, error] = remove_noise(xn, imf, 'Signal Xn', false);
-    
-    % For quality accessment, determine the reconstruction/original MSE 
-    mse = mean(abs(x-xnf).*abs(x-xnf));
-    fprintf('Achieved MSE: %d\n', mse);
-    
-    % Update minimum MSE
-    if mse < min_mse
-        min_mse = mse;
-        error_min_mse = error_margins(i);
-        best_xnf = xnf;
-        best_imf = imf;
-    end
-end
-
-fprintf('\nFrom the tested error margins, the one that yielded the minimum MSE was %d (mse = %d)\n', error_min_mse, min_mse);
-% We expect the less the error margin is, the less the MSE is going to be.
-
-fprintf('Selecting that as the new signal xnf!\n');
-xnf = best_xnf; % commit the xnf with less MSE as the unique signal xnf
-xn_imf = best_imf;
-
-% Compute SNR
-disp("SNR of xnf = " + snr(xnf) + ' dB')
-
-% Delete auxiliary variables
-clear('error_min_mse')
-clear('best_xnf')
-clear('best_imf')
-clear('min_mse')
+% Run tests
+[xnf, imf] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn, 'Signal Xn', MAX_SHIFTS, error_margins, true);
 
 
 %% Exercise c)
@@ -105,21 +59,21 @@ hht_imf(imf, 1/Fs);
 my_pHHT(xn, 1/Fs);
 
 
-%% d)
+%% Exercise d)
 
-noise_2 = 1+0.8*randn(ds,1);
-noise_2 = noise_2';
+% Add a random noise component with mean of 1 and SD of 0.8
+noise_2 = 1 + 0.8*randn(1, ds);
 xn2 = x + noise_2;
 
-tic
+% Let us try different error margins:
+error_margins = [1e-6 1e-4 1e-3 1e-1];
 
-[imf_xn2,residual_xn2] = emd(xn2,'MAXITERATIONS',500); 
+% Define maximum shifts limit
+MAX_SHIFTS = 500;
 
-toc
+% Run tests
+[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
 
-
-figure(4)
-plotimf(xn2,imf_xn2)
 
 %% e)
 
@@ -270,6 +224,63 @@ function [reconstructed_signal, error] = remove_noise(signal, imf, label, show)
     end
 
     return
+end
+
+
+% Uses emd_decomposition and remove_noise to perfom multiple tests on
+% diffent EMD-based reconstructions of variable margin errors.
+% Pass show=true to plot the results.
+% It returns the best reconstructed signal that yielded a less MSE with the
+% original signal. It also returns the IMFs of the respective EMD.
+function [best_reconstructed_signal, best_imf] = test_emd_decomposition_wDifferent_error_margins(original_signal, original_label, noisy_signal, noisy_label, max_shifts, error_margins, show)
+    
+    % Keep the minimum MSE
+    min_mse = 100; % arbitrary intial high value
+    
+    for i=1:length(error_margins) % for each error margin, do:
+        fprintf('\n\n####################\nTesting an error margin of %d\n', error_margins(i));
+
+        % Get EMD decomposition of the original signal
+        fprintf('\nComputing EMD decomposition of %s ...\n', original_label)
+        emd_decomposition(original_signal, error_margins(i), max_shifts, original_label, show);
+
+        % Get EMD decomposition of the noisy signal
+        fprintf('\nComputing EMD decomposition of %s ...\n', noisy_label)
+        imf = emd_decomposition(noisy_signal, error_margins(i), max_shifts, noisy_label, show);
+
+        % Remove noise of the noisy signal
+        fprintf('\nRemoving noise from %s ...\n', noisy_label)
+        [reconstructed_signal, error] = remove_noise(noisy_signal, imf, noisy_label, show);
+
+        % For quality accessment, determine the reconstruction/original MSE 
+        mse = mean(abs(original_signal-reconstructed_signal).*abs(original_signal-reconstructed_signal));
+        fprintf('Achieved MSE: %d\n', mse);
+
+        % Update minimum MSE
+        if mse < min_mse
+            min_mse = mse;
+            error_min_mse = error_margins(i);
+            best_reconstructed_signal = reconstructed_signal;
+            best_imf = imf;
+        end
+    end
+
+    fprintf('\nFrom the tested error margins, the one that yielded the minimum MSE was %d (mse = %d).\n', error_min_mse, min_mse);
+    % We expect the less the error margin is, the less the MSE is going to be.
+
+    fprintf('Returning that as the best reconstructed signal.\n');
+
+    % Compute SNR
+    disp("SNR of the best reconstructed signal = " + snr(reconstructed_signal) + ' dB')
+
+    % Delete auxiliary variables
+    clear('error_min_mse')
+    clear('best_xn2f')
+    clear('best_imf2')
+    clear('min_mse')
+    
+    return
+    
 end
 
 
