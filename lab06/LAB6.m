@@ -75,23 +75,18 @@ MAX_SHIFTS = 500;
 [xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
 
 
-%% e)
+%% Exercise e)
 
+% Let us try different error margins:
+error_margins = [0.005 0.05 0.001];
 
-tic
-[imf_100,residual_100] = emd(xn2,'MAXITERATIONS',100);
-toc
+% Run tests for 100 shifts maximum
+MAX_SHIFTS = 100;
+[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
 
-tic
-[imf_1000,residual_1000] = emd(xn2,'MAXITERATIONS',1000); 
-toc
-
-
-figure(5)
-plotimf(xn,imf_100)
-
-figure(6)
-plotimf(xn,imf_1000)
+% Run tests for 1000 shifts maximum
+MAX_SHIFTS = 1000;
+[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
 
 
 %% f)
