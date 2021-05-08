@@ -1,4 +1,4 @@
-function [IMF] = emd(signal,options);
+function [IMF] = emdo(signal,options);
 
 % Computes the IMFs using variants of EMD.
 % Signal: Input signal to get decomposed.

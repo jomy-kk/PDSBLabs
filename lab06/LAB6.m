@@ -121,7 +121,7 @@ hold on
 plot (xremd);
 hold on
 legend({'Signal Xr', 'Signal Xremd'})
-title('Removing noise with EDM')
+title('Removing noise with EMD')
 axis tight
 
 % Determine errors
@@ -198,7 +198,7 @@ function imf = emd_decomposition(signal, error, max_shifts, label, show)
     % Compute IMF
     emd_options = emdoptimset('Stopping', 'Single_T', 'T', error, 'MaxN', max_shifts);
     t0 = tic;
-    imf = emd(signal, emd_options);
+    imf = emdo(signal, emd_options);
     toc(t0); % measure computation time
     
     % Plot IMF and residue
