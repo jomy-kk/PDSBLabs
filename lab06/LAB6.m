@@ -1,5 +1,7 @@
 % Lab 6
 
+import 
+
 %% Exercise a)
 
 % Load data
@@ -32,17 +34,53 @@ axis tight
 
 % Get SNR of signal xn
 snr = signal_to_noise_ratio(xn, noise);
+disp("SNR of xn = " + snr + ' dB')
 % it returns around 8 dB
 
 
-%% b)
+%% Exercise b)
 
-tic
-[imf,residual] = emd(xn,'MAXITERATIONS',500); 
-toc     
+% Let us try different error margins:
+error_margins = [1e-6 1e-4 1e-3 1e-1];
 
-figure(2)
-plotimf(xn,imf)
+% Define maximum shifts limit
+MAX_SHIFTS = 500;
+
+% Keep the minimum MSE
+min_mse = 100; % arbitrary high value
+error_min_mse = 0; % the error margin that yielded the minimum MSE
+
+for i=1:length(error_margins) % for each error margin, do:
+    fprintf('\n\n####################\nTesting an error margin of %d\n', error_margins(i));
+    
+    % On the following calls, pass show=true to plot the results.
+    
+    % Get EMD decomposition of the original signal
+    fprintf('\nComputing EMD decomposition of signal X...\n')
+    emd_decomposition(x, error_margins(i), MAX_SHIFTS, 'Signal X', false);
+    
+    % Get EMD decomposition of the noisy signal
+    fprintf('\nComputing EMD decomposition of signal Xn...\n')
+    imf = emd_decomposition(xn, error_margins(i), MAX_SHIFTS, 'Signal Xn', false);
+    
+    % Remove noise of the noisy signal
+    fprintf('\nRemoving noise from signal Xn...\n')
+    [xnf, error] = remove_noise(xn, imf, 'Signal Xn', false);
+    
+    % For quality accessment, determine the reconstruction/original MSE 
+    mse = mean(abs(x-xnf).*abs(x-xnf));
+    fprintf('Achieved MSE: %d\n', mse);
+    
+    % Update minimum MSE
+    if mse < min_mse
+        min_mse = mse;
+        error_min_mse = error_margins(i);
+    end
+end
+
+fprintf('\nFrom the tested error margins, the one that yielded the minimum MSE was %d (mse = %d)\n', error_min_mse, min_mse);
+% We expect the less the error margin is, the less the MSE is going to be.
+
 
 %% c)
 
@@ -145,6 +183,7 @@ hold on
 
 %% Auxiliary functions
 
+
 % Computes the signal to noise ratio, given a signal and its known noise
 % conttribution. The result is returned in dB
 function ratio = signal_to_noise_ratio(signal, noise)
@@ -152,5 +191,68 @@ function ratio = signal_to_noise_ratio(signal, noise)
     ratio = 20*(log10(rms(signal)/rms(noise))); % dB
     return
 end
+
+
+% EMD decomposition and plots 
+function imf = emd_decomposition(signal, error, max_shifts, label, show)
+
+    % Compute IMF
+    emd_options = emdoptimset('Stopping', 'Single_T', 'T', error, 'MaxN', max_shifts);
+    t0 = tic;
+    imf = emd(signal, emd_options);
+    toc(t0); % measure computation time
+    
+    % Plot IMF and residue
+    if show == true
+        plotimf(signal, imf, label);
+    end
+    
+    return
+end
+
+
+% Reconstructs a signal, removing its noise based on a given IMF computed
+% by EMD. Use emd_decomposition first to get the IMF of your signal.
+function [reconstructed_signal, error] = remove_noise(signal, imf, label, show)
+
+    % Get IMF size
+    [l_imf, len_imf] = size(imf);
+
+    % Allocate memory and initialize to zeros
+    reconstructed_signal = zeros(1,len_imf);
+    
+    % Remove the first IMF
+    for i = 1:(l_imf-1)
+        reconstructed_signal = reconstructed_signal + imf(l_imf+1-i,:);
+    end
+    
+    % Compute error
+    error = signal - reconstructed_signal;
+    
+    % Plot given signal, reconstructed signal and the error.
+    if show == true
+        figure;
+        subplot(3,1,1);
+        plot(signal);
+        title (label);
+        ylabel ('Amplitude [uV]');
+        axis tight
+        subplot(3,1,2);
+        plot(reconstructed_signal);
+        title (strcat(label, ' Reconstructed'));
+        ylabel ('Amplitude [uV]');
+        axis tight
+        subplot(3,1,3);
+        plot(error);
+        title ('Error');
+        ylabel ('Amplitude [uV]');
+        axis tight
+        sgtitle('Noise reduction')
+    end
+
+    return
+end
+
+
 
 
