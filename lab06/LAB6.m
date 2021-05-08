@@ -129,19 +129,22 @@ errma = x - xrma;
 erremd = x - xremd;
 
 % Plot what is asked
-figure(7)
-
-plot(x)
+figure(7);
+plot(x);
 hold on
-plot(xr)
+plot(xr);
 hold on
-plot(errma)
+plot(errma);
 hold on
-plot(erremd) 
+plot(erremd);
 hold on
 legend({'Signal X', 'Signal Xr', 'MA error', 'EMD error'})
 title('Comparison of noise removal errors between MA and EMD methods')
 axis tight
+
+% Determine MSEs
+fprintf('MSE of MA: %d\n', mean(abs(x-xrma).*abs(x-xrma)))
+fprintf('MSE of EMD: %d\n', mean(abs(x-xremd).*abs(x-xremd)))
 
 
 %% g)
