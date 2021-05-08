@@ -1,17 +1,42 @@
 % Lab 6
-%% a)
-load('ecg.mat')
-Fs = 128;
-ds = Fs*4;
-ini_point = 300;
-x = ecg(300:300+ds-1);
-noise = 0.4*randn(ds,1);
-noise = noise';
+
+%% Exercise a)
+
+% Load data
+load('data/ecg.mat')
+Fs = 128; % Hz
+
+% Trim data to contain 4 seconds
+ds = Fs*4; % number of samples to select
+ini_point = 300; % initial sample of the interval
+x = ecg(300:300+ds-1); % trimming
+x = normalize(x); % normalize signal using z-scores method
+
+% Confirm if the trimmed signal contains at least 3 QRS complexes
+figure;
+plot(x)
+xlabel('Sample number')
+ylabel('Amplitude [uV]')
+hold on
+% Yes, the plot confirms it contains 6 QRS complexes.
+
+% Add a random noise component with zero mean and 0.4 SD
+noise = 0.4*randn(1,ds);
 xn = x + noise;
 
-r = snr(x,noise);
+% Plot noised signal on the same original axis
+plot(xn)
+legend({'Signal X', 'Signal Xn (with noise)'})
+title('Original ECG signal and with added noise')
+axis tight
+
+% Get SNR of signal xn
+snr = signal_to_noise_ratio(xn, noise);
+% it returns around 8 dB
+
 
 %% b)
+
 tic
 [imf,residual] = emd(xn,'MAXITERATIONS',500); 
 toc     
@@ -118,5 +143,14 @@ plot(erriceemd)
 hold on
 
 
+%% Auxiliary functions
+
+% Computes the signal to noise ratio, given a signal and its known noise
+% conttribution. The result is returned in dB
+function ratio = signal_to_noise_ratio(signal, noise)
+    % ratio = snr(signal); % dB
+    ratio = 20*(log10(rms(signal)/rms(noise))); % dB
+    return
+end
 
 
