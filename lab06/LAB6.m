@@ -44,7 +44,7 @@ error_margins = [1e-6 1e-4 1e-3 1e-1];
 MAX_SHIFTS = 500;
 
 % Run tests
-[xnf, imf] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn, 'Signal Xn', MAX_SHIFTS, error_margins, true);
+[xnf, imf] = emd_and_remove_noise(x, 'Signal X', xn, 'Signal Xn', MAX_SHIFTS, error_margins, 1, true);
 
 
 %% Exercise c)
@@ -72,7 +72,7 @@ error_margins = [1e-6 1e-4 1e-3 1e-1];
 MAX_SHIFTS = 500;
 
 % Run tests
-[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
+[xnf2, imf2] = emd_and_remove_noise(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, 1, true);
 
 
 %% Exercise e)
@@ -82,29 +82,53 @@ error_margins = [0.005 0.05 0.001];
 
 % Run tests for 100 shifts maximum
 MAX_SHIFTS = 100;
-[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
+[xnf2, imf2] = emd_and_remove_noise(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, 1, true);
 
 % Run tests for 1000 shifts maximum
 MAX_SHIFTS = 1000;
-[xnf2, imf2] = test_emd_decomposition_wDifferent_error_margins(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, true);
+[xnf2, imf2] = emd_and_remove_noise(x, 'Signal X', xn2, 'Signal Xn2', MAX_SHIFTS, error_margins, 1, true);
 
 
-%% f)
+%% Exercise f)
 
-%r(0) = -1
-%r(4s) = 2
+% Add a linear ramp noise component from r(0)=-1 to r(4s)=2
+linear_ramp_noise = (0:512-1)*(5/512) - 1;
+xr = x + linear_ramp_noise;
 
-r = (0:512-1)*(5/512) - 1;
-    
-xr = x + r;
+%Try to remove the noise with a MA filter of order 50
+trend = ma(xr,100);
+xrma = xr - trend;
 
-[xrma] = ma(xr,50);
+% Plot results
+figure;
+plot(xr);
+hold on
+plot(trend);
+hold on
+plot (xrma);
+hold on
+legend({'Signal Xr', 'MA trend', 'Signal Xrma'})
+title('Removing noise with MA')
+axis tight
 
-[imf_xr,residual_xr] = emd(xr); 
+% Try to remove the noise using EMD, by removing the residue (-1 on the 7th argument)
+[xremd, ~] = emd_and_remove_noise(x, '', xr, '', 100, [0.0001, ], -1, false);
 
+% Plot results
+figure;
+plot(xr);
+hold on
+plot (xremd);
+hold on
+legend({'Signal Xr', 'Signal Xremd'})
+title('Removing noise with EDM')
+axis tight
+
+% Determine errors
 errma = x - xrma;
-%erremd = x - xremd;
+erremd = x - xremd;
 
+% Plot what is asked
 figure(7)
 
 plot(x)
@@ -113,8 +137,12 @@ plot(xr)
 hold on
 plot(errma)
 hold on
-%plot(erremd)    
+plot(erremd) 
 hold on
+legend({'Signal X', 'Signal Xr', 'MA error', 'EMD error'})
+title('Comparison of noise removal errors between MA and EMD methods')
+axis tight
+
 
 %% g)
 
@@ -181,7 +209,7 @@ end
 
 % Reconstructs a signal, removing its noise based on a given IMF computed
 % by EMD. Use emd_decomposition first to get the IMF of your signal.
-function [reconstructed_signal, error] = remove_noise(signal, imf, label, show)
+function [reconstructed_signal, error] = remove_noise(signal, imf, remove, label, show)
 
     % Get IMF size
     [l_imf, len_imf] = size(imf);
@@ -189,9 +217,20 @@ function [reconstructed_signal, error] = remove_noise(signal, imf, label, show)
     % Allocate memory and initialize to zeros
     reconstructed_signal = zeros(1,len_imf);
     
-    % Remove the first IMF
-    for i = 1:(l_imf-1)
-        reconstructed_signal = reconstructed_signal + imf(l_imf+1-i,:);
+    if remove == 1
+        disp("Removing the first IMF...")
+        % Remove the first IMF
+        for i = 1:(l_imf-1)
+            reconstructed_signal = reconstructed_signal + imf(l_imf+1-i,:);
+        end
+    end
+    
+    if remove == -1
+        disp("Removing the residue...")
+        % Remove the residue
+        for i = 1:(l_imf-1)
+            reconstructed_signal = reconstructed_signal + imf(i,:);
+        end
     end
     
     % Compute error
@@ -227,7 +266,7 @@ end
 % Pass show=true to plot the results.
 % It returns the best reconstructed signal that yielded a less MSE with the
 % original signal. It also returns the IMFs of the respective EMD.
-function [best_reconstructed_signal, best_imf] = test_emd_decomposition_wDifferent_error_margins(original_signal, original_label, noisy_signal, noisy_label, max_shifts, error_margins, show)
+function [best_reconstructed_signal, best_imf] = emd_and_remove_noise(original_signal, original_label, noisy_signal, noisy_label, max_shifts, error_margins, remove, show)
     
     % Keep the minimum MSE
     min_mse = 100; % arbitrary intial high value
@@ -245,7 +284,7 @@ function [best_reconstructed_signal, best_imf] = test_emd_decomposition_wDiffere
 
         % Remove noise of the noisy signal
         fprintf('\nRemoving noise from %s ...\n', noisy_label)
-        [reconstructed_signal, error] = remove_noise(noisy_signal, imf, noisy_label, show);
+        [reconstructed_signal, error] = remove_noise(noisy_signal, imf, remove, noisy_label, show);
 
         % For quality accessment, determine the reconstruction/original MSE 
         mse = mean(abs(original_signal-reconstructed_signal).*abs(original_signal-reconstructed_signal));
